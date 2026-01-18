@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="e2f6e22f-805b-49c2-bfb6-cc21eaecf69c" name="www-data-hetzner">
+        <fileTransfer rootFolder="/var/www/python-simple-storage-server" accessType="SFTP" host="135.181.87.5" port="22" sshConfigId="af50fab1-bd52-4735-850b-92af770b7adc" sshConfig="www-data@135.181.87.5:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="5f75329e-383f-4a27-bced-13fb6184fe7a" name="root-hetzner">
+        <fileTransfer accessType="SFTP" host="135.181.87.5" port="22" sshConfigId="932547d6-1386-439d-b544-656f6d0a998f" sshConfig="root@135.181.87.5:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
