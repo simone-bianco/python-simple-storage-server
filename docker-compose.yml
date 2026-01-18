@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  storage:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - STORAGE_API_KEY=${STORAGE_API_KEY:-change-me-in-production}
+      - STORAGE_PATH=/data/storage
+      - DATABASE_PATH=/data/storage.db
+      - AUTO_DELETE=true
+    volumes:
+      - storage_data:/data
+    restart: unless-stopped
+
+volumes:
+  storage_data:
