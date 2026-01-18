@@ -2,25 +2,15 @@
   "info": {
     "_postman_id": "dolphin-storage-server-collection",
     "name": "Dolphin Storage Server API",
-    "description": "Collection for testing the Dolphin Storage Server API locally and in production. This lightweight Flask server handles ZIP file uploads from RunPod workers, with optional auto-delete after download.",
+    "description": "Collection for testing the Dolphin Storage Server API.\n\n## Required Environment Variables\n\nCreate a Postman Environment with the following variables:\n- `storage_base_url`: Base URL of the server (e.g., http://localhost:5000)\n- `storage_api_key`: Your API key for authentication\n- `storage_job_id`: Job ID for upload/download/delete operations",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
-    "type": "apikey",
-    "apikey": [
+    "type": "bearer",
+    "bearer": [
       {
-        "key": "key",
-        "value": "X-API-Key",
-        "type": "string"
-      },
-      {
-        "key": "value",
+        "key": "token",
         "value": "{{storage_api_key}}",
-        "type": "string"
-      },
-      {
-        "key": "in",
-        "value": "header",
         "type": "string"
       }
     ]
@@ -35,9 +25,13 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/health",
-          "host": ["{{base_url}}"],
-          "path": ["health"]
+          "raw": "{{storage_base_url}}/health",
+          "host": [
+            "{{storage_base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
         },
         "description": "Health check endpoint. Returns server status, service name, and current timestamp. No authentication required."
       },
@@ -48,9 +42,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/health",
-              "host": ["{{base_url}}"],
-              "path": ["health"]
+              "raw": "{{storage_base_url}}/health",
+              "host": [
+                "{{storage_base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
             }
           },
           "status": "OK",
@@ -63,6 +61,16 @@
     {
       "name": "Upload File (Multipart)",
       "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{storage_api_key}}",
+              "type": "string"
+            }
+          ]
+        },
         "method": "POST",
         "header": [],
         "body": {
@@ -76,16 +84,20 @@
             },
             {
               "key": "job_id",
-              "value": "{{job_id}}",
+              "value": "{{storage_job_id}}",
               "type": "text",
               "description": "Unique job identifier"
             }
           ]
         },
         "url": {
-          "raw": "{{base_url}}/upload",
-          "host": ["{{base_url}}"],
-          "path": ["upload"]
+          "raw": "{{storage_base_url}}/upload",
+          "host": [
+            "{{storage_base_url}}"
+          ],
+          "path": [
+            "upload"
+          ]
         },
         "description": "Upload a ZIP file using multipart/form-data. Requires 'file' field with the ZIP and 'job_id' field with a unique identifier."
       },
@@ -96,9 +108,13 @@
             "method": "POST",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/upload",
-              "host": ["{{base_url}}"],
-              "path": ["upload"]
+              "raw": "{{storage_base_url}}/upload",
+              "host": [
+                "{{storage_base_url}}"
+              ],
+              "path": [
+                "upload"
+              ]
             }
           },
           "status": "Created",
@@ -112,26 +128,60 @@
             "method": "POST",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/upload",
-              "host": ["{{base_url}}"],
-              "path": ["upload"]
+              "raw": "{{storage_base_url}}/upload",
+              "host": [
+                "{{storage_base_url}}"
+              ],
+              "path": [
+                "upload"
+              ]
             }
           },
           "status": "Bad Request",
           "code": 400,
           "_postman_previewlanguage": "json",
           "body": "{\n  \"error\": \"Missing job_id\"\n}"
+        },
+        {
+          "name": "Upload - Unauthorized",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{storage_base_url}}/upload",
+              "host": [
+                "{{storage_base_url}}"
+              ],
+              "path": [
+                "upload"
+              ]
+            }
+          },
+          "status": "Unauthorized",
+          "code": 401,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"error\": \"Invalid or missing API key\"\n}"
         }
       ]
     },
     {
       "name": "Upload File (Raw Binary)",
       "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{storage_api_key}}",
+              "type": "string"
+            }
+          ]
+        },
         "method": "POST",
         "header": [
           {
             "key": "X-Job-Id",
-            "value": "{{job_id}}",
+            "value": "{{storage_job_id}}",
             "type": "text",
             "description": "Job ID passed as header for raw binary uploads"
           },
@@ -148,9 +198,13 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/upload",
-          "host": ["{{base_url}}"],
-          "path": ["upload"]
+          "raw": "{{storage_base_url}}/upload",
+          "host": [
+            "{{storage_base_url}}"
+          ],
+          "path": [
+            "upload"
+          ]
         },
         "description": "Upload a ZIP file as raw binary data. Job ID must be provided in the X-Job-Id header."
       },
@@ -159,12 +213,27 @@
     {
       "name": "Download File",
       "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{storage_api_key}}",
+              "type": "string"
+            }
+          ]
+        },
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/download/{{job_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["download", "{{job_id}}"]
+          "raw": "{{storage_base_url}}/download/{{storage_job_id}}",
+          "host": [
+            "{{storage_base_url}}"
+          ],
+          "path": [
+            "download",
+            "{{storage_job_id}}"
+          ]
         },
         "description": "Download a ZIP file by job_id. By default, the file is automatically deleted after download if AUTO_DELETE is enabled on the server."
       },
@@ -175,9 +244,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/download/{{job_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["download", "{{job_id}}"]
+              "raw": "{{storage_base_url}}/download/{{storage_job_id}}",
+              "host": [
+                "{{storage_base_url}}"
+              ],
+              "path": [
+                "download",
+                "{{storage_job_id}}"
+              ]
             }
           },
           "status": "OK",
@@ -201,9 +275,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/download/non-existent-job",
-              "host": ["{{base_url}}"],
-              "path": ["download", "non-existent-job"]
+              "raw": "{{storage_base_url}}/download/non-existent-job",
+              "host": [
+                "{{storage_base_url}}"
+              ],
+              "path": [
+                "download",
+                "non-existent-job"
+              ]
             }
           },
           "status": "Not Found",
@@ -217,9 +296,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/download/deleted-job",
-              "host": ["{{base_url}}"],
-              "path": ["download", "deleted-job"]
+              "raw": "{{storage_base_url}}/download/deleted-job",
+              "host": [
+                "{{storage_base_url}}"
+              ],
+              "path": [
+                "download",
+                "deleted-job"
+              ]
             }
           },
           "status": "Gone",
@@ -232,12 +316,27 @@
     {
       "name": "Download File (Keep)",
       "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{storage_api_key}}",
+              "type": "string"
+            }
+          ]
+        },
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/download/{{job_id}}?keep=true",
-          "host": ["{{base_url}}"],
-          "path": ["download", "{{job_id}}"],
+          "raw": "{{storage_base_url}}/download/{{storage_job_id}}?keep=true",
+          "host": [
+            "{{storage_base_url}}"
+          ],
+          "path": [
+            "download",
+            "{{storage_job_id}}"
+          ],
           "query": [
             {
               "key": "keep",
@@ -253,12 +352,27 @@
     {
       "name": "Delete File",
       "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{storage_api_key}}",
+              "type": "string"
+            }
+          ]
+        },
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/delete/{{job_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["delete", "{{job_id}}"]
+          "raw": "{{storage_base_url}}/delete/{{storage_job_id}}",
+          "host": [
+            "{{storage_base_url}}"
+          ],
+          "path": [
+            "delete",
+            "{{storage_job_id}}"
+          ]
         },
         "description": "Manually delete a stored file by job_id. The file is removed from disk and marked as deleted in the database."
       },
@@ -269,9 +383,14 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/delete/{{job_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["delete", "{{job_id}}"]
+              "raw": "{{storage_base_url}}/delete/{{storage_job_id}}",
+              "host": [
+                "{{storage_base_url}}"
+              ],
+              "path": [
+                "delete",
+                "{{storage_job_id}}"
+              ]
             }
           },
           "status": "OK",
@@ -285,9 +404,14 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/delete/non-existent-job",
-              "host": ["{{base_url}}"],
-              "path": ["delete", "non-existent-job"]
+              "raw": "{{storage_base_url}}/delete/non-existent-job",
+              "host": [
+                "{{storage_base_url}}"
+              ],
+              "path": [
+                "delete",
+                "non-existent-job"
+              ]
             }
           },
           "status": "Not Found",
@@ -300,12 +424,26 @@
     {
       "name": "List Files",
       "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{storage_api_key}}",
+              "type": "string"
+            }
+          ]
+        },
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/list",
-          "host": ["{{base_url}}"],
-          "path": ["list"]
+          "raw": "{{storage_base_url}}/list",
+          "host": [
+            "{{storage_base_url}}"
+          ],
+          "path": [
+            "list"
+          ]
         },
         "description": "List all stored files for administrative purposes. Returns the last 100 files with their metadata including job_id, file_size, upload time, download time, and deletion status."
       },
@@ -316,9 +454,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/list",
-              "host": ["{{base_url}}"],
-              "path": ["list"]
+              "raw": "{{storage_base_url}}/list",
+              "host": [
+                "{{storage_base_url}}"
+              ],
+              "path": [
+                "list"
+              ]
             }
           },
           "status": "OK",
@@ -334,35 +476,19 @@
       "listen": "prerequest",
       "script": {
         "type": "text/javascript",
-        "exec": [""]
+        "exec": [
+          ""
+        ]
       }
     },
     {
       "listen": "test",
       "script": {
         "type": "text/javascript",
-        "exec": [""]
+        "exec": [
+          ""
+        ]
       }
-    }
-  ],
-  "variable": [
-    {
-      "key": "base_url",
-      "value": "http://localhost:5000",
-      "type": "string",
-      "description": "Base URL of the Dolphin Storage Server"
-    },
-    {
-      "key": "storage_api_key",
-      "value": "your-api-key-here",
-      "type": "string",
-      "description": "API Key for authentication"
-    },
-    {
-      "key": "job_id",
-      "value": "test-job-123",
-      "type": "string",
-      "description": "Job ID for upload/download/delete operations"
     }
   ]
 }
