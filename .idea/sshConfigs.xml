@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="SshConfigs">
-    <configs>
-      <sshConfig host="135.181.87.5" id="af50fab1-bd52-4735-850b-92af770b7adc" keyPath="C:\.ssh\simonebianco.ppk" port="22" nameFormat="DESCRIPTIVE" username="www-data" useOpenSSHConfig="true" />
-      <sshConfig host="135.181.87.5" id="932547d6-1386-439d-b544-656f6d0a998f" keyPath="C:\.ssh\simonebianco.ppk" port="22" nameFormat="DESCRIPTIVE" username="root" useOpenSSHConfig="true" />
-    </configs>
-  </component>
-</project>
