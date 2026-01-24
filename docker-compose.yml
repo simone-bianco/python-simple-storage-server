@@ -6,13 +6,30 @@ services:
     ports:
       - "5000:5000"
     environment:
+      # API Configuration
       - STORAGE_API_KEY=${STORAGE_API_KEY:-change-me-in-production}
       - STORAGE_PATH=/data/storage
       - DATABASE_PATH=/data/storage.db
       - AUTO_DELETE=true
+      
+      # Admin Web Interface (CHANGE IN PRODUCTION!)
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-@Password1234.}
+      - SECRET_KEY=${SECRET_KEY:-change-this-to-a-random-secret-key}
+      
+      # Rate Limiting
+      - RATE_LIMIT_UI=${RATE_LIMIT_UI:-60}
+      - RATE_LIMIT_LOGIN=${RATE_LIMIT_LOGIN:-10}
     volumes:
       - storage_data:/data
     restart: unless-stopped
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   storage_data:
