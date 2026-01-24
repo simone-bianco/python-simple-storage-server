@@ -59,7 +59,8 @@ app.config['RATE_LIMIT_UI'] = os.environ.get('RATE_LIMIT_UI', '60')
 app.config['RATE_LIMIT_LOGIN'] = os.environ.get('RATE_LIMIT_LOGIN', '10')
 
 # Session configuration for security
-app.config['SESSION_COOKIE_SECURE'] = os.environ.get('DEBUG', 'false').lower() != 'true'
+default_secure = os.environ.get('DEBUG', 'false').lower() != 'true'
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', str(default_secure)).lower() == 'true'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)

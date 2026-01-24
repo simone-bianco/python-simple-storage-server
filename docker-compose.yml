@@ -20,6 +20,7 @@ services:
       # Rate Limiting
       - RATE_LIMIT_UI=${RATE_LIMIT_UI:-60}
       - RATE_LIMIT_LOGIN=${RATE_LIMIT_LOGIN:-10}
+      - SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE:-false}
     volumes:
       - storage_data:/data
     restart: unless-stopped
