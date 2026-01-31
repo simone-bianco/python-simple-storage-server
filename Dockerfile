@@ -1,35 +1,73 @@
-# Dolphin Storage Server
-FROM python:3.10-slim
-
+# ----------------------------------------------------------
+# Stage 1: Build Frontend Assets
+# ----------------------------------------------------------
+FROM node:20-alpine AS frontend
 WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
-# Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# ----------------------------------------------------------
+# Stage 2: Production PHP Image
+# ----------------------------------------------------------
+FROM php:8.2-fpm-alpine
 
-# Copy application
-COPY app.py .
+# Install system dependencies
+RUN apk add --no-cache \
+    nginx \
+    supervisor \
+    zip \
+    unzip \
+    libzip-dev \
+    sqlite \
+    libpng-dev \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    icu-dev
 
-# Copy templates and static files
-COPY templates/ ./templates/
-COPY static/ ./static/
+# Install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+    pdo_mysql \
+    pdo_sqlite \
+    zip \
+    gd \
+    intl \
+    opcache
 
-# Create storage directory
-RUN mkdir -p /data/storage
+# Configure PHP Production settings
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 100M/' "$PHP_INI_DIR/php.ini" \
+    && sed -i 's/post_max_size = 8M/post_max_size = 100M/' "$PHP_INI_DIR/php.ini"
 
-# Environment defaults
-ENV STORAGE_PATH=/data/storage
-ENV DATABASE_PATH=/data/storage.db
-ENV PORT=5000
-ENV AUTO_DELETE=true
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Admin defaults (CHANGE IN PRODUCTION!)
-ENV ADMIN_USERNAME=admin
-ENV ADMIN_PASSWORD=@Password1234.
-ENV SECRET_KEY=change-this-to-a-random-secret-key
+# Setup Working Directory
+WORKDIR /var/www/html
 
-# Expose port
-EXPOSE 5000
+# Copy Project Files
+COPY . .
 
-# Run with gunicorn for production
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "120", "app:app"]
+# Copy Built Assets
+COPY --from=frontend /app/public/build public/build
+
+# Install PHP Dependencies (No Dev)
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Setup Permissions
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Setup Nginx (Internal)
+COPY z-docs/nginx/app-internal.conf /etc/nginx/http.d/default.conf
+
+# Setup Supervisor
+COPY z-docs/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Expose Port 80 (Internal Nginx)
+EXPOSE 80
+
+# Start Supervisor (manages Nginx & PHP-FPM)
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
