@@ -37,7 +37,7 @@ Whether you need a dedicated media server, a temporary file holding area, or a r
 
     ```bash
     git clone <repository-url>
-    cd python-simple-storage-server
+    cd simple-storage-server
     ```
 
 2.  **Install Dependencies**
