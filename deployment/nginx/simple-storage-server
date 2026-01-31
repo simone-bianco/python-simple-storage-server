@@ -1,7 +1,11 @@
 server {
-    listen 80;
-    server_name localhost;
-    root /var/www/html/public;
+    listen 5000;
+    server_name _;
+    root /var/www/simple-storage-server/public;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+    add_header X-XSS-Protection "1; mode=block";
 
     index index.php;
 
@@ -17,7 +21,7 @@ server {
     error_page 404 /index.php;
 
     location ~ \.php$ {
-        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         include fastcgi_params;
     }
@@ -26,6 +30,5 @@ server {
         deny all;
     }
 
-    # Increase upload size
     client_max_body_size 100M;
 }

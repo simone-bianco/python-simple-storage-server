@@ -1,80 +1,86 @@
-# Deployment Guide (Hetzner)
+# Deployment Guide (Manual)
 
-This guide assumes you have a Linux server (Ubuntu/Debian) on Hetzner with Docker and Nginx installed.
+This guide assumes you have a Linux server (Ubuntu/Debian) where you want to deploy the application manually.
 
 ## 1. Prepare the Server
 
-Ensure Docker and Docker Compose are installed:
+Ensure dependencies are installed:
 
 ```bash
-apt update
-apt install -y docker.io docker-compose nginx git
+sudo apt update
+sudo apt install -y php8.2 php8.2-fpm php8.2-xml php8.2-curl php8.2-zip php8.2-sqlite3 unzip nginx supervisor composer
+```
+
+### Firewall Configuration (Crucial)
+
+By default, port 5000 might be blocked. Allow it:
+
+```bash
+sudo ufw allow 5000/tcp
+sudo ufw reload
 ```
 
 ## 2. Clone & Configure
 
-Clone the repository to your server (e.g., in `/var/www` or `/opt`):
+Clone the repository to your server (target: `/var/www/simple-storage-server`):
 
 ```bash
-git clone https://github.com/simone-bianco/simple-storage-server.git
+cd /var/www
+sudo git clone https://github.com/simone-bianco/simple-storage-server.git
+sudo chown -R www-data:www-data simple-storage-server
 cd simple-storage-server
 ```
 
-Create the production `.env`:
+Create production configuration:
 
 ```bash
 cp .env.example .env
+php artisan key:generate
+touch database/database.sqlite
+php artisan migrate --force
 ```
 
-Edit `.env` and configure:
-
-- `APP_ENV=production`
-- `APP_DEBUG=false`
-- `APP_URL=http://YOUR_IP_OR_DOMAIN/storage`
-- `STORAGE_API_KEY=...`
-- `ADMIN_EMAIL=...`
-- `ADMIN_PASSWORD=...`
-- `SWAGGER_PASSWORD=...`
-
-## 3. Build & Run Docker
-
-Build the container and start it:
+Edit `.env` and set your credentials:
 
 ```bash
-docker-compose -f docker-compose.prod.yml up -d --build
+nano .env
 ```
 
-Initialize the database (first time only):
+## 3. Configure Supervisor (Standalone Server)
 
-```bash
-# Create the sqlite file inside the volume logic or via container
-docker-compose -f docker-compose.prod.yml exec app touch /var/www/html/database/data/database.sqlite
-docker-compose -f docker-compose.prod.yml exec app php artisan migrate --force
-docker-compose -f docker-compose.prod.yml exec app php artisan db:seed --force
-docker-compose -f docker-compose.prod.yml exec app php artisan l5-swagger:generate
-```
+We will use Supervisor to run both the Queue Worker and the Web Server directly on port 5000.
 
-## 4. Accessing the Application
+1.  **Stop Nginx** (to free up port 5000 if it was running):
 
-By default, the application runs on **Port 5000**.
+    ```bash
+    sudo systemctl stop nginx
+    # Or remove the site if you don't need it
+    sudo rm /etc/nginx/sites-enabled/simple-storage-server
+    ```
 
-- **Admin Panel**: `http://YOUR_SERVER_IP:5000/admin/login`
-- **API Endpoint**: `http://YOUR_SERVER_IP:5000/api/upload`
-- **Swagger Docs**: `http://YOUR_SERVER_IP:5000/api/documentation`
+2.  **Copy Config**:
 
-## 5. (Optional) Reverse Proxy
+    ```bash
+    sudo cp deployment/supervisor/simple-storage-server.conf /etc/supervisor/conf.d/
+    ```
 
-If you prefer to use Nginx on the host to forward traffic (e.g. to use port 80 or a domain), you can use the provided configuration.
+3.  **Start Services**:
 
-Copy the config:
+    ```bash
+    sudo supervisorctl reread
+    sudo supervisorctl update
+    sudo supervisorctl restart all
+    ```
 
-```bash
-cp z-docs/nginx/storage-server.conf /etc/nginx/sites-available/storage-server.conf
-```
+4.  **Verify**:
+    - Check status: `sudo supervisorctl status`
+    - You should see `simple-storage-serve` and `simple-storage-worker` RUNNING.
+    - Access: `http://YOUR_IP:5000/admin/login`
 
-Edit and enable it as needed.
+**Note**: This method bypasses Nginx/PHP-FPM, eliminating configuration headaches. The server runs directly via PHP's built-in server, which is sufficient for simple storage tasks.
 
-## Troubleshooting
+## 5. Verify
 
-- **Logs**: `docker-compose -f docker-compose.prod.yml logs -f`
-- **Permissions**: If uploads fail, check `storage/app` permissions inside the container.
+Your API should be accessible at `http://your-domain.com:5000/api`.
+
+- Logs: `storage/logs/laravel.log` or `storage/logs/worker.log`.

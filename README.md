@@ -57,6 +57,7 @@ Whether you need a dedicated media server, a temporary file holding area, or a r
     Configure your security settings in `.env`:
 
     ```env
+    APP_URL=http://your-domain.com:5000
     STORAGE_API_KEY=your-secret-api-key
     ADMIN_USERNAME=admin
     ADMIN_PASSWORD=strong-password
@@ -66,12 +67,53 @@ Whether you need a dedicated media server, a temporary file holding area, or a r
 4.  **Database Migration**
 
     ```bash
-    php artisan migrate
+    touch database/database.sqlite
+    php artisan migrate --force
     ```
 
-5.  **Serve**
+5.  **Deployment (Nginx + Supervisor)**
+
+    This project is designed to be deployed manually on a Linux server (e.g., Ubuntu) at `/var/www/simple-storage-server`.
+
+    **Step A: Nginx Configuration**
+    1.  Copy the provided Nginx config:
+        ```bash
+        sudo cp deployment/nginx/simple-storage-server /etc/nginx/sites-available/
+        ```
+    2.  Edit it if necessary (e.g., update `server_name`):
+        ```bash
+        sudo nano /etc/nginx/sites-available/simple-storage-server
+        ```
+    3.  Enable the site:
+        ```bash
+        sudo ln -s /etc/nginx/sites-available/simple-storage-server /etc/nginx/sites-enabled/
+        sudo nginx -t
+        sudo systemctl reload nginx
+        ```
+
+    **Step B: Supervisor Configuration**
+    1.  Install Supervisor:
+        ```bash
+        sudo apt-get install supervisor
+        ```
+    2.  Copy the provided Supervisor config:
+        ```bash
+        sudo cp deployment/supervisor/simple-storage-server.conf /etc/supervisor/conf.d/
+        ```
+    3.  Update Supervisor:
+        ```bash
+        sudo supervisorctl reread
+        sudo supervisorctl update
+        sudo supervisorctl start simple-storage-worker:*
+        ```
+
+    **Step C: Permissions**
+
+    Ensure the web server user has access:
+
     ```bash
-    php artisan serve
+    sudo chown -R www-data:www-data /var/www/simple-storage-server
+    sudo chmod -R 775 /var/www/simple-storage-server/storage /var/www/simple-storage-server/bootstrap/cache
     ```
 
 ## 📖 API Documentation
