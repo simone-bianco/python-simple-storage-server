@@ -1,7 +1,7 @@
 # Simple Storage Server
 
 <p align="center">
-  <img src="public/logo.png" alt="Simple Storage Server Logo" width="200">
+  <img src="./public/logo.png" alt="Simple Storage Server Logo" width="200">
 </p>
 
 <p align="center">
